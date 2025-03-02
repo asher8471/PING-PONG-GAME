@@ -1,5 +1,3 @@
-# PING-PONG-GAME
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,11 +12,14 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #222;
-            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            font-family: 'Arial', sans-serif;
+            color: #fff;
         }
         canvas {
-            border: 2px solid #fff;
+            border: 2px solid #00ffcc;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #00ffcc;
         }
         .modal {
             display: none;
@@ -28,27 +29,29 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.7);
         }
         .modal-content {
-            background-color: #fefefe;
+            background-color: #333;
             margin: 15% auto;
             padding: 20px;
-            border: 1px solid #888;
+            border: 2px solid #00ffcc;
+            border-radius: 10px;
             width: 300px;
             text-align: center;
+            box-shadow: 0 0 20px #00ffcc;
         }
         .close {
             color: #aaa;
             float: right;
             font-size: 28px;
             font-weight: bold;
+            cursor: pointer;
         }
         .close:hover,
         .close:focus {
-            color: black;
+            color: #fff;
             text-decoration: none;
-            cursor: pointer;
         }
         ul {
             list-style-type: none;
@@ -56,7 +59,27 @@
         }
         li {
             margin: 10px 0;
+            padding: 10px;
+            background-color: #444;
+            border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        li:hover {
+            background-color: #555;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #00ffcc;
+            border: none;
+            border-radius: 5px;
+            color: #000;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #00cc99;
         }
     </style>
 </head>
@@ -64,7 +87,7 @@
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <div id="upgradeModal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
+            <span class="close">×</span>
             <h2>Upgrades</h2>
             <p>Points: <span id="pointsDisplay">0</span></p>
             <ul id="upgradeList"></ul>
@@ -74,16 +97,16 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Game variables
-        let playerPaddle = { x: 10, y: 250, width: 10, height: 100, dy: 0, color: 'white' };
-        let aiPaddle = { x: 780, y: 250, width: 10, height: 100, dy: 0, color: 'white' };
-        let ball = { x: 400, y: 300, radius: 10, dx: 5, dy: 5, speed: 5, color: 'white' };
+        // Game objects
+        let playerPaddle = { x: 10, y: 250, width: 10, height: 100, dy: 0, color: '#00ffcc' };
+        let aiPaddle = { x: 780, y: 250, width: 10, height: 100, dy: 0, color: '#ff00cc' };
+        let ball = { x: 400, y: 300, radius: 10, dx: 5, dy: 5, speed: 5, color: '#ffff00' };
         let playerScore = 0;
         let aiScore = 0;
         let playerPoints = parseInt(localStorage.getItem('playerPoints')) || 0;
         let purchasedUpgrades = JSON.parse(localStorage.getItem('purchasedUpgrades')) || [];
 
-        // Rain variables
+        // Rain effect
         let rainDrops = [];
         for (let i = 0; i < 100; i++) {
             rainDrops.push({
@@ -105,21 +128,21 @@
         // Upgrades
         const UPGRADES = [
             { name: 'Increase Paddle Size', cost: 100, effect: () => playerPaddle.height += 10 },
-            { name: 'Decrease Ball Speed', cost: 150, effect: () => ball.speed -= 1 },
-            { name: 'Change Paddle Color', cost: 50, effect: () => playerPaddle.color = 'red' }
+            { name: 'Decrease Ball Speed', cost: 150, effect: () => { if (ball.speed > 1) ball.speed -= 1; } },
+            { name: 'Change Paddle Color', cost: 50, effect: () => playerPaddle.color = '#ff00cc' }
         ];
 
-        // Apply purchased upgrades
+        // Apply saved upgrades
         for (const upgrade of purchasedUpgrades) {
             UPGRADES.find(u => u.name === upgrade).effect();
         }
 
-        // Sound effects (replace with actual sound files)
+        // Sound effects (replace paths with actual audio files)
         const ballHitSound = new Audio('path/to/ball_hit.mp3');
         const wallBounceSound = new Audio('path/to/wall_bounce.mp3');
         const scoreSound = new Audio('path/to/score.mp3');
 
-        // Keyboard input
+        // Player controls
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowUp') playerPaddle.dy = -5;
             if (e.key === 'ArrowDown') playerPaddle.dy = 5;
@@ -165,8 +188,9 @@
             localStorage.setItem('purchasedUpgrades', JSON.stringify(purchasedUpgrades));
         }
 
+        // Drawing functions
         function drawRain() {
-            ctx.strokeStyle = 'blue';
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
             ctx.lineWidth = 1;
             for (const drop of rainDrops) {
                 ctx.beginPath();
@@ -192,18 +216,19 @@
         }
 
         function drawScore() {
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = '#fff';
             ctx.font = '24px Arial';
             ctx.fillText(`Player: ${playerScore}`, 50, 30);
             ctx.fillText(`AI: ${aiScore}`, 700, 30);
         }
 
+        // Movement logic
         function movePaddles() {
             playerPaddle.y += playerPaddle.dy;
             if (playerPaddle.y < 0) playerPaddle.y = 0;
             if (playerPaddle.y + playerPaddle.height > canvas.height) playerPaddle.y = canvas.height - playerPaddle.height;
 
-            // Simple AI for the opponent
+            // Basic AI for right paddle
             if (ball.y < aiPaddle.y + aiPaddle.height / 2) aiPaddle.dy = -3;
             else aiPaddle.dy = 3;
             aiPaddle.y += aiPaddle.dy;
@@ -215,18 +240,18 @@
             ball.x += ball.dx;
             ball.y += ball.dy;
 
-            // Wall collision
+            // Wall bounce
             if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
                 ball.dy = -ball.dy;
                 wallBounceSound.play();
             }
 
             // Paddle collision
-            if (ball.x - ball.radius < playerPaddle.x + playerPaddle.width && ball.y > playerPaddle.y && ball.y < playerPaddle.y + playerPaddle.height) {
+            if (isBallCollidingWithPaddle(ball, playerPaddle)) {
                 ball.dx = ball.speed;
                 ballHitSound.play();
             }
-            if (ball.x + ball.radius > aiPaddle.x && ball.y > aiPaddle.y && ball.y < aiPaddle.y + aiPaddle.height) {
+            if (isBallCollidingWithPaddle(ball, aiPaddle)) {
                 ball.dx = -ball.speed;
                 ballHitSound.play();
             }
@@ -234,7 +259,7 @@
             // Scoring
             if (ball.x - ball.radius < 0) {
                 aiScore++;
-                playerPoints += 10; // Earn points for scoring
+                playerPoints += 10;
                 resetBall();
                 scoreSound.play();
             }
@@ -253,6 +278,7 @@
             ball.dy = ball.speed * (Math.random() > 0.5 ? 1 : -1);
         }
 
+        // Power-up logic
         function spawnPowerUp() {
             if (Date.now() > nextPowerUpTime) {
                 const type = getRandomPowerUpType();
@@ -303,6 +329,14 @@
             }
         }
 
+        // Collision detection
+        function isBallCollidingWithPaddle(ball, paddle) {
+            return ball.x - ball.radius < paddle.x + paddle.width &&
+                   ball.x + ball.radius > paddle.x &&
+                   ball.y - ball.radius < paddle.y + paddle.height &&
+                   ball.y + ball.radius > paddle.y;
+        }
+
         function isCollision(paddle, obj) {
             return paddle.x < obj.x + obj.width &&
                    paddle.x + paddle.width > obj.x &&
@@ -310,6 +344,7 @@
                    paddle.y + paddle.height > obj.y;
         }
 
+        // Game loop
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawRain();
@@ -324,11 +359,11 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Start the game
+        // Initialize and start
         resetBall();
         gameLoop();
 
-        // Add a button to open the upgrade modal
+        // Upgrade button
         const upgradeButton = document.createElement('button');
         upgradeButton.textContent = 'Upgrades';
         upgradeButton.style.position = 'absolute';
